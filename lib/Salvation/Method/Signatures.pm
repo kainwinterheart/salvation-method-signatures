@@ -48,7 +48,7 @@ use Module::Load 'load';
 
 use base 'Devel::Declare::MethodInstaller::Simple';
 
-our $VERSION = 0.01;
+our $VERSION = 0.02;
 
 =head1 METHODS
 
