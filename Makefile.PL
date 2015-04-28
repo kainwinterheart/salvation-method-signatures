@@ -9,7 +9,7 @@ WriteMakefile (
     PREREQ_PM => {
         boolean => 0,
         'Devel::Declare' => 0,
-        'Salvation::TC' => 0,
+        'Salvation::TC' => '0.11',
         'Module::Load' => 0,
     },
     META_MERGE => {

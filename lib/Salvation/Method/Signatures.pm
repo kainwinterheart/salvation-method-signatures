@@ -114,7 +114,8 @@ sub parse_proto {
 
     my ( $self, $str ) = @_;
     load my $type_system_class = $self -> type_system_class();
-    my $sig = ( ( $str =~ m/^\s*$/ ) ? [] : $type_system_class -> tokenize_signature_str( "(${str})" ) );
+    my $type_parser = $type_system_class -> get_type_parser();
+    my $sig = ( ( $str =~ m/^\s*$/ ) ? [] : $type_parser -> tokenize_signature_str( "(${str})", {} ) );
 
     my @positional_vars = ( $self -> self_var_name() );
     my $code = '';
