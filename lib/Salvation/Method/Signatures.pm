@@ -44,11 +44,13 @@ use strict;
 use warnings;
 use boolean;
 
+use B ();
 use Module::Load 'load';
+use Salvation::UpdateGvFLAGS ();
 
 use base 'Devel::Declare::MethodInstaller::Simple';
 
-our $VERSION = 0.02;
+our $VERSION = 0.03;
 
 =head1 METHODS
 
@@ -100,6 +102,61 @@ sub import {
     );
 
     return;
+}
+
+{
+    my %installed_methods = ();
+
+=head2 strip_name()
+
+Обёртка вокруг L<Devel::Declare#strip_name>.
+
+Делает всё то же самое, но дополнительно запоминает, в каком модуле какие
+методы были объявлены с использованием L<DirectMod::Method::Signatures>.
+
+Внутренний метод.
+
+=cut
+
+    sub strip_name {
+
+        my ( $self, @rest ) = @_;
+        my $name = $self -> SUPER::strip_name( @rest );
+
+        push( @{ $installed_methods{ $self -> { 'into' } } }, $name );
+
+        return $name;
+    }
+
+=head2 mark_methods_as_not_imported( Str class )
+
+Маркирует все методы класса C<class>, объявленные с использованием
+L<DirectMod::Method::Signatures>, как "не импортированные".
+
+Внутренний метод.
+
+=cut
+
+    sub mark_methods_as_not_imported {
+
+        my ( $self, $class ) = @_;
+        my $imported_cv = ( eval { B::GVf_IMPORTED_CV() } || 0x80 );
+
+        no strict 'refs';
+
+        foreach my $method ( @{ $installed_methods{ $class } // [] } ) {
+
+            my $name = "${class}::${method}";
+            my $obj = B::svref_2object( \*$name );
+
+            if( $obj -> GvFLAGS() & $imported_cv ) {
+
+                Salvation::UpdateGvFLAGS::toggle_glob_flag_by_name( $name, $imported_cv );
+            }
+        }
+
+        return;
+    }
 }
 
 =head2 parse_proto( Str $str )

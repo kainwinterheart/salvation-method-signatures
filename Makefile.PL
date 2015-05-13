@@ -11,6 +11,8 @@ WriteMakefile (
         'Devel::Declare' => 0,
         'Salvation::TC' => '0.11',
         'Module::Load' => 0,
+        'Salvation::UpdateGvFLAGS' => 0,
+        B => 0,
     },
     META_MERGE => {
     "meta-spec" => { version => 2 },
