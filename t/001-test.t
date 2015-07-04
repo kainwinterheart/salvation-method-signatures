@@ -53,7 +53,7 @@ method second( Str :named_arg1!, Int :named_arg2! ) {
     return;
 }
 
-method third( Str :named_arg3, Int :named_arg4 ) {
+method third( ! Str :named_arg3, Int :named_arg4 ) {
 
     subtest 'third()' => sub {
 
@@ -98,7 +98,7 @@ method fifth( Int required, Int optional? ) {
 
 method fifth2( Int required, Int optional? ) { fail() }
 
-method sixth( Int required, Int optional? ) {
+method sixth( ! Int required, Int optional? ) {
 
     subtest 'sixth()' => sub {
 

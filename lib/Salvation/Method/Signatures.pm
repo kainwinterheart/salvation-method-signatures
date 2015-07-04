@@ -50,7 +50,7 @@ use Salvation::UpdateGvFLAGS ();
 
 use base 'Devel::Declare::MethodInstaller::Simple';
 
-our $VERSION = 0.03;
+our $VERSION = 0.04;
 
 =head1 METHODS
 
@@ -172,7 +172,11 @@ sub parse_proto {
     my ( $self, $str ) = @_;
     load my $type_system_class = $self -> type_system_class();
     my $type_parser = $type_system_class -> get_type_parser();
-    my $sig = ( ( $str =~ m/^\s*$/ ) ? [] : $type_parser -> tokenize_signature_str( "(${str})", {} ) );
+    my $sig = ( ( $str =~ m/^\s*$/ )
+        ? { data => [], opts => {} }
+        : $type_parser -> tokenize_signature_str( "(${str})", {} )
+    );
+    ( $sig, my $opts ) = @$sig{ 'data', 'opts' };
 
     my @positional_vars = ( $self -> self_var_name() );
     my $code = '';
@@ -265,13 +269,47 @@ sub parse_proto {
         $named_checks .= ';';
     }
 
-    my $named_vars_code = ( $named_checks ? sprintf( '( my ( %s ) = do {
+    my $named_vars_code = '';
 
-        no warnings \'syntax\';
+    if( $named_checks ) {
 
-        my %%args = @_[ %d .. $#_ ]; %s @args{ %s };
+        if( $opts -> { 'strict' } ) {
 
-    } );', join( ', ', @named_vars ), scalar( @positional_vars ), $named_checks, join( ', ', @named_params ) ) : '' );
+            $named_vars_code = sprintf( '( my ( %s ) = do {
+
+                no warnings \'syntax\';
+
+                if( scalar( () = @_[ %d .. $#_ ] ) %% 2 ) {
+                    die( "Too many positional parameters" );
+                }
+                my %%args = @_[ %d .. $#_ ]; %s my @l = delete( @args{ %s } );
+                if( scalar( keys( %%args ) ) > 0 ) {
+                    die( "Unexpected named parameters found: " . join( ", ", keys( %%args ) ) );
+                }
+                @l;
+
+            } );', join( ', ', @named_vars ), ( scalar( @positional_vars ) )x2, $named_checks, join( ', ', @named_params ) );
+
+        } else {
+
+            $named_vars_code = sprintf( '( my ( %s ) = do {
+
+                no warnings \'syntax\';
+
+                if( scalar( () = @_[ %d .. $#_ ] ) %% 2 ) {
+                    die( "Too many positional parameters" );
+                }
+                my %%args = @_[ %d .. $#_ ]; %s @args{ %s };
+
+            } );', join( ', ', @named_vars ), ( scalar( @positional_vars ) )x2, $named_checks, join( ', ', @named_params ) );
+        }
+
+    } elsif( $opts -> { 'strict' } ) {
+
+        $named_vars_code = sprintf( 'if( scalar( @_ ) > %d ) {
+            die( "Too many positional parameters" );
+        }', scalar( @positional_vars ) );
+    }
 
     $code = sprintf( 'my ( %s ) = @_; %s %s local @_ = ();', join( ', ', @positional_vars ), $code, $named_vars_code );
 

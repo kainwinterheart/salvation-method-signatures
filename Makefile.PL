@@ -9,7 +9,7 @@ WriteMakefile (
     PREREQ_PM => {
         boolean => 0,
         'Devel::Declare' => 0,
-        'Salvation::TC' => '0.11',
+        'Salvation::TC' => '0.12',
         'Module::Load' => 0,
         'Salvation::UpdateGvFLAGS' => 0,
         B => 0,
@@ -21,8 +21,8 @@ WriteMakefile (
                 type => 'git',
                 url => 'https://github.com/kainwinterheart/salvation-method-signatures.git',
                 web => 'https://github.com/kainwinterheart/salvation-method-signatures',
-                bugtracker => 'https://github.com/kainwinterheart/salvation-method-signatures/issues',
             },
+            bugtracker => 'https://github.com/kainwinterheart/salvation-method-signatures/issues',
         },
     },
 );
